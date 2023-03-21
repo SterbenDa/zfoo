@@ -106,6 +106,22 @@ public abstract class ByteBufUtils {
         return writeVarInt(byteBuf, (value << 1) ^ (value >> 31));
     }
 
+    /**
+     * 打印计算过程
+     */
+    public static int writeIntShow(ByteBuf byteBuf, int value) {
+        System.out.println(StringUtils.MULTIPLE_HYPHENS);
+        System.out.println("value:" + value + StringUtils.TAB + Integer.toBinaryString(value) + StringUtils.TAB + "size:" + Integer.toBinaryString(value).length());
+        System.out.println("zigZag:" + writeZigZagInt(value) + StringUtils.TAB + Integer.toBinaryString(value));
+        int varInt = writeInt(byteBuf, value);
+        System.out.println("varInt:" + varInt + StringUtils.TAB + Integer.toBinaryString(varInt) + StringUtils.TAB + "size:" + Integer.toBinaryString(varInt).length());
+        return varInt;
+    }
+
+    public static int writeZigZagInt(int value) {
+        return (value << 1) ^ (value >> 31);
+    }
+
     private static int writeVarInt(ByteBuf byteBuf, int value) {
         int a = value >>> 7;
         if (a == 0) {

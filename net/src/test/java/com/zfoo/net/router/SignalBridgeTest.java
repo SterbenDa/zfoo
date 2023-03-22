@@ -20,7 +20,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /**
  * @author godotg
@@ -33,13 +36,57 @@ public class SignalBridgeTest {
     private final int count = 100_0000;
     private final int totalIndex = 10;
 
+
+    // equal with 32767
+    private static final int SIGNAL_MASK = 0B00000000_00000000_01111111_11111111;
+
+    /**
+     * key：signalId
+     */
+    private static final Map<Integer, SignalAttachment> signalAttachmentMap = new ConcurrentHashMap<>(1000);
+    private static final AtomicReferenceArray<SignalAttachment> signalAttachmentArray = new AtomicReferenceArray<>(SIGNAL_MASK + 1);
+
+    @Test
+    public void testSingleThreadSpeed_ConcurrentHashMap() throws InterruptedException {
+        SignalAttachment signalAttachment = new SignalAttachment();
+        long now = System.currentTimeMillis();
+        int times = 1_0000;
+        while (times-- > 0) {
+            for (int i = 0; i < SIGNAL_MASK; i++) {
+                signalAttachmentMap.put(i, signalAttachment);
+            }
+            for (int i = 0; i < SIGNAL_MASK; i++) {
+                signalAttachmentMap.remove(i);
+            }
+        }
+        System.out.println(System.currentTimeMillis() - now);
+    }
+
+    @Test
+    public void testSingleThreadSpeed_AtomicReferenceArray() throws InterruptedException {
+        SignalAttachment signalAttachment = new SignalAttachment();
+        long now = System.currentTimeMillis();
+        int times = 1_0000;
+        while (times-- > 0) {
+            for (int i = 0; i < SIGNAL_MASK; i++) {
+                signalAttachmentArray.compareAndSet(i, null, signalAttachment);
+            }
+            for (int i = 0; i < SIGNAL_MASK; i++) {
+                signalAttachmentArray.lazySet(i, null);
+            }
+        }
+
+        System.out.println(System.currentTimeMillis() - now);
+    }
+
     @Test
     public void test() throws InterruptedException {
-        for (int i = 0; i < 10; i++) {
+        long now = System.currentTimeMillis();
+        for (int i = 0; i < 12; i++) {
             arrayTest();
         }
         SignalBridge.status();
-        System.out.println(SignalAttachment.ATOMIC_ID.get());
+        System.out.println(SignalAttachment.ATOMIC_ID.get() + "  totalCost:" + (System.currentTimeMillis() - now));
     }
 
     public void arrayTest() throws InterruptedException {
@@ -59,7 +106,6 @@ public class SignalBridgeTest {
         System.out.println(TimeUtils.currentTimeMillis() - startTime);
     }
 
-
     public void addAndRemoveArray() {
         var signalList = new ArrayList<Integer>(totalIndex);
         for (var i = 0; i < count; i++) {
@@ -76,4 +122,46 @@ public class SignalBridgeTest {
         }
     }
 
+    @Test
+    public void test2() throws InterruptedException {
+        long now = System.currentTimeMillis();
+        for (int i = 0; i < 12; i++) {
+            mapTest();
+        }
+        SignalBridge.status();
+        System.out.println(SignalAttachment.ATOMIC_ID.get() + "  totalCost:" + (System.currentTimeMillis() - now));
+    }
+
+    public void mapTest() throws InterruptedException {
+        var startTime = TimeUtils.currentTimeMillis();
+
+        var countDownLatch = new CountDownLatch(executorSize);
+        for (var i = 0; i < executorSize; i++) {
+            EventBus.execute(i, new Runnable() {
+                @Override
+                public void run() {
+                    addAndRemoveMap();
+                    countDownLatch.countDown();
+                }
+            });
+        }
+        countDownLatch.await();
+        System.out.println(TimeUtils.currentTimeMillis() - startTime);
+    }
+
+    public void addAndRemoveMap() {
+        var signalList = new ArrayList<Integer>(totalIndex);
+        for (var i = 0; i < count; i++) {
+            signalList.clear();
+            for (var j = 0; j < totalIndex; j++) {
+                var signalAttachment = new SignalAttachment();
+                signalAttachmentMap.put(signalAttachment.getSignalId(), signalAttachment);
+                signalList.add(signalAttachment.getSignalId());
+            }
+
+            for (var signalId : signalList) {
+                signalAttachmentMap.remove(signalId);
+            }
+        }
+    }
 }

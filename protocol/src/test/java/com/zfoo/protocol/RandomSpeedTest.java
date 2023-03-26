@@ -53,6 +53,7 @@ public class RandomSpeedTest extends SpeedTest {
     @Ignore
     @Test
     public void singleThreadRandomBenchmarks() {
+//        int times = benchmark * 100;
         int times = 1;
         System.out.println(StringUtils.format("[单线程随机性能测试-->[benchmark:{}]]", times));
 
@@ -73,6 +74,9 @@ public class RandomSpeedTest extends SpeedTest {
         for (int i = 0; i < times; i++) {
             int c = random.nextInt();
             boolean g = random.nextBoolean();
+
+//            int c = 1;
+//            boolean g = true;
 
             // zfoo,kryo
             SimpleObject simpleObject = new SimpleObject();
@@ -111,8 +115,8 @@ public class RandomSpeedTest extends SpeedTest {
             // 从buffer中反序列化出对象
             var packet = ProtocolManager.read(buffer);
 
-            // zfoo包含了2个字节的包id，其他方式没算，所以这里也不算
-            int length = buffer.writerIndex() - 2;
+            // 这里只算纯数据部分的字节长度，zfoo包含了2个字节的包id，1个字节的有无包可以优化掉。其他方式没算，所以这里也不算
+            int length = buffer.writerIndex() - 2 - 1;
             totalSize += length;
         }
 
@@ -192,8 +196,9 @@ public class RandomSpeedTest extends SpeedTest {
 
     @Ignore
     @Test
-    public void int278() {
+    public void int_278() {
         ByteBuf buffer = new UnpooledHeapByteBuf(ByteBufAllocator.DEFAULT, 100, 1_0000);
-        ByteBufUtils.writeIntShow(buffer, 278);
+        ByteBufUtils.writeIntShow(buffer, -278);
+        int a = 7;
     }
 }

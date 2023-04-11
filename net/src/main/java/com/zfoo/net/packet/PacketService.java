@@ -125,7 +125,7 @@ public class PacketService implements IPacketService {
         }
 
         // 注册协议接收器
-        var componentBeans =  applicationContext.getBeansWithAnnotation(Component.class);
+        var componentBeans = applicationContext.getBeansWithAnnotation(Component.class);
         for (var bean : componentBeans.values()) {
             PacketBus.registerPacketReceiverDefinition(bean);
         }

@@ -22,20 +22,22 @@ import java.util.Map;
 
 /**
  * @author godotg
- * @version 4.0
+ * @version 3.0
  */
 public class StorageLong<K, V> extends Storage<K, V> {
 
-    private LongObjectHashMap<V> dataMap = new LongObjectHashMap<V>();
+    private LongObjectHashMap<V> dataMap;
 
     public StorageLong(Storage<K, V> storage) {
+        this.dataMap = new LongObjectHashMap<V>(storage.size());
+        this.dataMap.putAll((Map<? extends Long, ? extends V>) storage.getData());
         super.indexMap = storage.indexMap;
         super.uniqueIndexMap = storage.uniqueIndexMap;
         super.clazz = storage.clazz;
         super.idDef = storage.idDef;
         super.indexDefMap = storage.indexDefMap;
         super.recycle = storage.recycle;
-        this.dataMap.putAll((Map<? extends Long, ? extends V>) storage.getData());
+        storage.recycleStorage();
     }
 
     @Override

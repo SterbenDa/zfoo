@@ -16,7 +16,7 @@
         <spring.boot.version>3.4.5</spring.boot.version>
         <junit.version>4.13.2</junit.version>
         <!-- bytecode enhancement -->
-        <javassist.version>3.30.2-GA</javassist.version>
+        <javassist.version>3.31.0-GA</javassist.version>
         <bytebuddy.version>1.17.6</bytebuddy.version>
         <!-- network framework -->
         <netty.version>4.1.122.Final</netty.version>
